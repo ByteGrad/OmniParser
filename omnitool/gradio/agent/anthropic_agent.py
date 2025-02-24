@@ -162,7 +162,7 @@ def _maybe_filter_to_n_most_recent_images(
         if isinstance(tool_result.get("content"), list):
             new_content = []
             for content in tool_result.get("content", []):
-                if isinstance(content, dict) and content.get("type") == "image":
+                if isinstance(content, dict) and content.get("type") == "text":
                     if images_to_remove > 0:
                         images_to_remove -= 1
                         continue
