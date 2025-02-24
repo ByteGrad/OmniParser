@@ -162,7 +162,7 @@ def get_parsed_content_icon_phi3v(filtered_boxes, ocr_bbox, image_source, captio
         inputs_cat = {k: torch.concatenate(v).to(device) for k, v in inputs.items()}
 
         generation_args = { 
-            "max_new_tokens": 25, 
+            "max_new_tokens": 35, 
             "temperature": 0.01, 
             "do_sample": False, 
         } 
