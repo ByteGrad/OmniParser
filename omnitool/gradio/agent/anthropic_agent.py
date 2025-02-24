@@ -33,10 +33,12 @@ from typing import Dict
 
 BETA_FLAG = "computer-use-2024-10-22"
 
+
 class APIProvider(StrEnum):
     ANTHROPIC = "anthropic"
     BEDROCK = "bedrock"
     VERTEX = "vertex"
+
 
 SYSTEM_PROMPT = f"""<SYSTEM_CAPABILITY>
 * You are utilizing a Windows system with internet access.
@@ -44,10 +46,11 @@ SYSTEM_PROMPT = f"""<SYSTEM_CAPABILITY>
 </SYSTEM_CAPABILITY>
 """
 
+
 class AnthropicActor:
     def __init__(
-        self, 
-        model: str, 
+        self,
+        model: str,
         provider: APIProvider,
         api_key: str,
         api_response_callback: Callable[[APIResponse[BetaMessage]], None],
@@ -61,11 +64,11 @@ class AnthropicActor:
         self.api_response_callback = api_response_callback
         self.max_tokens = max_tokens
         self.only_n_most_recent_images = only_n_most_recent_images
-        
+
         self.tool_collection = ToolCollection(ComputerTool())
 
         self.system = SYSTEM_PROMPT
-        
+
         self.total_token_usage = 0
         self.total_cost = 0
         self.print_usage = print_usage
@@ -79,7 +82,7 @@ class AnthropicActor:
             self.client = AnthropicBedrock()
 
     def __call__(
-        self, 
+        self,
         *,
         messages: list[BetaMessageParam]
     ):
@@ -87,7 +90,8 @@ class AnthropicActor:
         Generate a response given history messages.
         """
         if self.only_n_most_recent_images:
-            _maybe_filter_to_n_most_recent_images(messages, self.only_n_most_recent_images)
+            _maybe_filter_to_n_most_recent_images(
+                messages, self.only_n_most_recent_images)
 
         # Call the API synchronously
         raw_response = self.client.beta.messages.with_raw_response.create(
@@ -99,17 +103,20 @@ class AnthropicActor:
             betas=["computer-use-2024-10-22"],
         )
 
-        self.api_response_callback(cast(APIResponse[BetaMessage], raw_response))
+        self.api_response_callback(
+            cast(APIResponse[BetaMessage], raw_response))
 
         response = raw_response.parse()
         print(f"AnthropicActor response: {response}")
 
         self.total_token_usage += response.usage.input_tokens + response.usage.output_tokens
-        self.total_cost += (response.usage.input_tokens * 3 / 1000000 + response.usage.output_tokens * 15 / 1000000)
-        
+        self.total_cost += (response.usage.input_tokens * 3 /
+                            1000000 + response.usage.output_tokens * 15 / 1000000)
+
         if self.print_usage:
-            print(f"Claude total token usage so far: {self.total_token_usage}, total cost so far: $USD{self.total_cost}")
-        
+            print(
+                f"Claude total token usage so far: {self.total_token_usage}, total cost so far: $USD{self.total_cost}")
+
         return response
 
 
@@ -133,7 +140,8 @@ def _maybe_filter_to_n_most_recent_images(
             item
             for message in messages
             for item in (
-                message["content"] if isinstance(message["content"], list) else []
+                message["content"] if isinstance(
+                    message["content"], list) else []
             )
             if isinstance(item, dict) and item.get("type") == "tool_result"
         ],
@@ -143,7 +151,7 @@ def _maybe_filter_to_n_most_recent_images(
         1
         for tool_result in tool_result_blocks
         for content in tool_result.get("content", [])
-        if isinstance(content, dict) and content.get("type") == "image"
+        if isinstance(content, dict) and content.get("type") == "text"
     )
 
     images_to_remove = total_images - images_to_keep
